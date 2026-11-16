@@ -1,0 +1,376 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// -------------------------------------------------------------
+// MODELO DE DADOS MULTI-TENANT SAAS LUCRIX
+// -------------------------------------------------------------
+
+model Tenant {
+  id              String   @id @default(uuid())
+  name            String
+  tradeName       String?
+  document        String?  // CNPJ / CPF
+  businessType    String   @default("ELECTRONICS") // ELECTRONICS, APPAREL, SERVICES, GENERAL
+  phone           String?
+  email           String?
+  plan            String   @default("PRO") // STARTER, PRO, BUSINESS
+  subscriptionStatus String @default("ACTIVE") // ACTIVE, TRIAL, PAST_DUE, CANCELED
+  asaasCustomerId String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  users                 User[]
+  partners              Partner[]
+  products              Product[]
+  categories            Category[]
+  customers             Customer[]
+  suppliers             Supplier[]
+  sales                 Sale[]
+  purchases             Purchase[]
+  tradeOperations       TradeOperation[]
+  financialAccounts     FinancialAccount[]
+  financialTransactions FinancialTransaction[]
+  serviceOrders         ServiceOrder[]
+  warrantyClaims        WarrantyClaim[]
+  quickCalculations     QuickCalculation[]
+}
+
+model User {
+  id           String   @id @default(uuid())
+  tenantId     String
+  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name         String
+  email        String
+  role         String   @default("ADMIN") // ADMIN, MANAGER, OPERATOR, VIEWER
+  avatarUrl    String?
+  pinCode      String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  sales        Sale[]
+  purchases    Purchase[]
+
+  @@unique([tenantId, email])
+}
+
+model Partner {
+  id             String   @id @default(uuid())
+  tenantId       String
+  tenant         Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name           String
+  document       String?
+  sharePercentage Float   @default(50.0) // % de participação nos lucros
+  totalCapitalInvested Float @default(0.0)
+  totalWithdrawn  Float   @default(0.0)
+  phone          String?
+  email          String?
+  status         String   @default("ACTIVE")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  distributions  PartnerDistribution[]
+}
+
+model PartnerDistribution {
+  id          String   @id @default(uuid())
+  partnerId   String
+  partner     Partner  @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  type        String   @default("PROFIT_SHARE") // PROFIT_SHARE, CAPITAL_INJECTION, WITHDRAWAL
+  amount      Float
+  date        DateTime @default(now())
+  notes       String?
+  createdAt   DateTime @default(now())
+}
+
+model Category {
+  id          String   @id @default(uuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name        String
+  icon        String?
+  type        String   @default("PRODUCT") // PRODUCT, SERVICE, APPAREL, SMARTPHONE
+  createdAt   DateTime @default(now())
+
+  products    Product[]
+}
+
+model Product {
+  id              String   @id @default(uuid())
+  tenantId        String
+  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  categoryId      String?
+  category        Category? @relation(fields: [categoryId], references: [id])
+  
+  // Identificação e especificações
+  name            String
+  brand           String?
+  model           String?
+  serialNumber    String?  // IMEI 1 ou Número de Série único
+  serialNumber2   String?  // IMEI 2
+  color           String?
+  storage         String?  // Ex: 128GB, 256GB
+  batteryHealth   Int?     // Para smartphones (% saúde bateria)
+  apparelSize     String?  // Para roupas: P, M, G, GG, 40, etc.
+  condition       String   @default("SEMI_NEW") // NEW, SEMI_NEW, USED, FOR_PARTS
+  description     String?
+  imageUrl        String?
+
+  // Custos e Precificação
+  quantity        Int      @default(1)
+  purchasePrice   Float    @default(0.0) // Custo de aquisição
+  additionalCosts Float    @default(0.0) // Custos extras agregados (peças/reparos/frete)
+  totalCost       Float    @default(0.0) // purchasePrice + additionalCosts
+  targetPrice     Float    @default(0.0) // Preço de venda desejado
+  minPrice        Float?   // Preço mínimo com desconto máximo
+  marginProjected Float    @default(0.0) // (targetPrice - totalCost) / targetPrice * 100
+
+  // Status e fluxo
+  status          String   @default("READY") // DRAFT, READY, IN_REPAIR, IN_IMPROVEMENT, RESERVED, SOLD, SWAPPED
+  draftStep       Int      @default(5)       // 1 a 5 para controle do assistente de cadastro
+  
+  // Datas e Fornecedor
+  supplierName    String?
+  purchaseDate    DateTime? @default(now())
+  soldDate        DateTime?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  expenses        ProductExpense[]
+  saleItems       SaleItem[]
+  tradeSwappedOut TradeOperation[] @relation("SwappedOut")
+  tradeSwappedIn  TradeOperation[] @relation("SwappedIn")
+}
+
+model ProductExpense {
+  id          String   @id @default(uuid())
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  description String   // Ex: Troca de Tela, Bateria, Frete, Higienização
+  amount      Float
+  date        DateTime @default(now())
+  supplier    String?
+  createdAt   DateTime @default(now())
+}
+
+model Customer {
+  id          String   @id @default(uuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name        String
+  phone       String?
+  document    String?  // CPF / CNPJ
+  email       String?
+  city        String?
+  state       String?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  sales          Sale[]
+  serviceOrders  ServiceOrder[]
+  warrantyClaims WarrantyClaim[]
+}
+
+model Supplier {
+  id          String   @id @default(uuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name        String
+  contactName String?
+  phone       String?
+  document    String?
+  city        String?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  purchases   Purchase[]
+}
+
+model Sale {
+  id            String   @id @default(uuid())
+  tenantId      String
+  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  saleNumber    Int      @default(1001)
+  customerId    String?
+  customer      Customer? @relation(fields: [customerId], references: [id])
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id])
+  
+  // Valores
+  subtotal      Float    @default(0.0)
+  discount      Float    @default(0.0)
+  shippingCost  Float    @default(0.0)
+  totalAmount   Float    @default(0.0) // subtotal - discount + shippingCost
+  totalCost     Float    @default(0.0) // Custo das mercadorias vendidas
+  grossProfit   Float    @default(0.0) // totalAmount - totalCost
+  
+  // Forma e status do pagamento
+  paymentMethod String   @default("PIX") // PIX, CASH, CREDIT_CARD, DEBIT_CARD, SPLIT, TERM
+  paymentStatus String   @default("PAID") // PAID, PENDING, PARTIALLY_PAID, CANCELED
+  notes         String?
+  soldAt        DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  items         SaleItem[]
+  installments  PaymentInstallment[]
+}
+
+model SaleItem {
+  id          String   @id @default(uuid())
+  saleId      String
+  sale        Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  productId   String?
+  product     Product? @relation(fields: [productId], references: [id])
+  title       String   // Nome do produto ou serviço
+  quantity    Int      @default(1)
+  unitCost    Float    @default(0.0)
+  unitPrice   Float    @default(0.0)
+  totalAmount Float    @default(0.0)
+  createdAt   DateTime @default(now())
+}
+
+model PaymentInstallment {
+  id          String   @id @default(uuid())
+  saleId      String
+  sale        Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  number      Int      @default(1)
+  totalCount  Int      @default(1)
+  amount      Float
+  dueDate     DateTime
+  paidDate    DateTime?
+  status      String   @default("PAID") // PAID, PENDING, OVERDUE
+  method      String   @default("PIX")
+  createdAt   DateTime @default(now())
+}
+
+model Purchase {
+  id          String    @id @default(uuid())
+  tenantId    String
+  tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  supplierId  String?
+  supplier    Supplier? @relation(fields: [supplierId], references: [id])
+  userId      String?
+  user        User?     @relation(fields: [userId], references: [id])
+  description String
+  totalAmount Float     @default(0.0)
+  status      String    @default("COMPLETED") // COMPLETED, PENDING
+  paymentMethod String  @default("PIX")
+  purchasedAt DateTime  @default(now())
+  createdAt   DateTime  @default(now())
+}
+
+model TradeOperation {
+  id             String   @id @default(uuid())
+  tenantId       String
+  tenant         Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  title          String   // Ex: Troca iPhone 13 por iPhone 15 Pro + Volta
+  
+  // Produto que saiu da nossa loja
+  productOutId   String?
+  productOut     Product? @relation("SwappedOut", fields: [productOutId], references: [id])
+  valueOut       Float    @default(0.0) // Valor de mercado atribuído ao produto entregue
+  costOut        Float    @default(0.0) // Custo de aquisição do produto entregue
+  
+  // Produto que entrou para a nossa loja
+  productInId    String?
+  productIn      Product? @relation("SwappedIn", fields: [productInId], references: [id])
+  valueIn        Float    @default(0.0) // Valor de mercado atribuído ao produto recebido
+  
+  // Diferença financeira (Volta em dinheiro)
+  // Positivo: cliente pagou volta para a loja. Negativo: a loja pagou volta para o cliente
+  cashDifference Float    @default(0.0)
+  additionalCost Float    @default(0.0) // Custos extras da operação (frete, comissão, etc.)
+  
+  realizedProfit Float    @default(0.0) // Lucro estimado apurado na catira
+  notes          String?
+  operationDate  DateTime @default(now())
+  createdAt      DateTime @default(now())
+}
+
+model FinancialAccount {
+  id          String   @id @default(uuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name        String   // Ex: Caixa Físico, Nubank PJ, Inter, Asaas
+  type        String   @default("BANK") // CASH, BANK, GATEWAY, WALLET
+  balance     Float    @default(0.0)
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  transactions FinancialTransaction[]
+}
+
+model FinancialTransaction {
+  id          String   @id @default(uuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  accountId   String?
+  account     FinancialAccount? @relation(fields: [accountId], references: [id])
+  type        String   // INCOME, EXPENSE, TRANSFER
+  category    String   // VENDAS, REPAROS, ALUGUEL, PRO_LABORE, FORNECEDOR, FRETE, MARKETING, IMPOSTOS
+  description String
+  amount      Float
+  date        DateTime @default(now())
+  status      String   @default("PAID") // PAID, PENDING, SCHEDULED
+  dueDate     DateTime?
+  referenceId String?  // ID da Venda, Compra ou Troca associada
+  createdAt   DateTime @default(now())
+}
+
+model ServiceOrder {
+  id          String   @id @default(uuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  orderNumber Int      @default(2001)
+  customerId  String?
+  customer    Customer? @relation(fields: [customerId], references: [id])
+  device      String   // Aparelho ou item atendido (Ex: iPhone 14 Pro Max 256GB Grafite)
+  serialOrImei String?
+  defectReport String  // Defeito relatado pelo cliente
+  diagnosis   String?  // Laudo técnico
+  status      String   @default("OPEN") // OPEN, BUDGET_WAITING, APPROVED, IN_PROGRESS, READY, DELIVERED, CANCELED
+  laborCost   Float    @default(0.0)    // Mão de obra
+  partsCost   Float    @default(0.0)    // Peças aplicadas
+  totalAmount Float    @default(0.0)    // Total orçado
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model WarrantyClaim {
+  id          String   @id @default(uuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  claimNumber Int      @default(3001)
+  customerId  String?
+  customer    Customer? @relation(fields: [customerId], references: [id])
+  itemName    String
+  serialNumber String?
+  saleDate    DateTime?
+  issueReport String
+  solution    String?
+  status      String   @default("IN_REVIEW") // IN_REVIEW, ACCEPTED, REPAIRED, REPLACED, REJECTED
+  costIncurred Float   @default(0.0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model QuickCalculation {
+  id          String   @id @default(uuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  type        String   // RESELLER, TRADE, MARKUP, BREAK_EVEN, AUCTION
+  title       String
+  inputData   String   // JSON com parâmetros informados
+  resultData  String   // JSON com resultado calculado
+  createdAt   DateTime @default(now())
+}

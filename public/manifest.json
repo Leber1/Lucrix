@@ -1,0 +1,24 @@
+{
+  "name": "Lucrix — Sua Operação no Lucro",
+  "short_name": "Lucrix",
+  "description": "Software de Gestão Empresarial, Vendas, Estoque e Finanças para Empreendedores e Revendedores.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#080B11",
+  "theme_color": "#080B11",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
