@@ -7,6 +7,9 @@ import { SidebarDrawer } from "@/components/layout/SidebarDrawer";
 import { QuickActionsModal } from "@/components/layout/QuickActionsModal";
 import { ProductWizardModal } from "@/components/modules/ProductWizardModal";
 import { SaleModal } from "@/components/modules/SaleModal";
+import { MarketingStoryModal } from "@/components/modules/MarketingStoryModal";
+import { ExportReportModal } from "@/components/modules/ExportReportModal";
+import { InstallPwaModal } from "@/components/modules/InstallPwaModal";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -17,6 +20,9 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(false);
   const [isProductWizardOpen, setIsProductWizardOpen] = useState(false);
   const [isSaleModalOpen, setIsSaleModalOpen] = useState(false);
+  const [isMarketingModalOpen, setIsMarketingModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [isInstallPwaModalOpen, setIsInstallPwaModalOpen] = useState(false);
 
   return (
     <div className="relative min-h-screen flex flex-col bg-dark-950 pb-20">
@@ -43,6 +49,9 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
         onClose={() => setIsQuickActionsOpen(false)}
         onOpenProductWizard={() => setIsProductWizardOpen(true)}
         onOpenSaleModal={() => setIsSaleModalOpen(true)}
+        onOpenMarketingModal={() => setIsMarketingModalOpen(true)}
+        onOpenExportModal={() => setIsExportModalOpen(true)}
+        onOpenInstallPwaModal={() => setIsInstallPwaModalOpen(true)}
       />
 
       {/* Modal Guiado em 5 Etapas de Cadastro de Produto */}
@@ -55,6 +64,24 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
       <SaleModal
         isOpen={isSaleModalOpen}
         onClose={() => setIsSaleModalOpen(false)}
+      />
+
+      {/* Modal de Gerador de Prints de Marketing (Stories) */}
+      <MarketingStoryModal
+        isOpen={isMarketingModalOpen}
+        onClose={() => setIsMarketingModalOpen(false)}
+      />
+
+      {/* Modal de Exportação de Dados por Data Personalizada */}
+      <ExportReportModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+      />
+
+      {/* Modal de Instalação PWA no Celular */}
+      <InstallPwaModal
+        isOpen={isInstallPwaModalOpen}
+        onClose={() => setIsInstallPwaModalOpen(false)}
       />
     </div>
   );

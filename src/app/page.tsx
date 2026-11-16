@@ -19,15 +19,21 @@ import {
   Zap,
   Flame,
   Award,
+  Camera,
+  FileSpreadsheet,
 } from "lucide-react";
 import { formatCurrency, formatPercent, formatDate } from "@/lib/utils";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { MarketingStoryModal } from "@/components/modules/MarketingStoryModal";
+import { ExportReportModal } from "@/components/modules/ExportReportModal";
 
 export default function DashboardPage() {
   const [period, setPeriod] = useState("month");
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
+  const [isStoryModalOpen, setIsStoryModalOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
   const fetchStats = async (selectedPeriod: string) => {
     setLoading(true);
@@ -123,9 +129,9 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* SELETOR DE PERÍODOS ULTRA REFINADO */}
-      <div className="flex items-center justify-between gap-3 overflow-x-auto pb-1 scrollbar-none">
-        <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-dark-900 border border-slate-800 shadow-sm max-w-full">
+      {/* SELETOR DE PERÍODOS ULTRA REFINADO & AÇÕES RÁPIDAS DE MARKETING */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1">
+        <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-dark-900 border border-slate-800 shadow-sm max-w-full overflow-x-auto scrollbar-none">
           {periods.map((p) => {
             const isSelected = period === p.id;
             return (
@@ -144,9 +150,27 @@ export default function DashboardPage() {
           })}
         </div>
 
-        <div className="hidden sm:flex items-center gap-2 text-xs text-slate-400 font-medium">
-          <Calendar className="w-4 h-4 text-emerald-400" />
-          <span>Filtro Ativo: {periods.find((p) => p.id === period)?.label}</span>
+        {/* Botões de Marketing & Exportação por Data Personalizada */}
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            leftIcon={<Camera className="w-3.5 h-3.5 text-amber-400" />}
+            onClick={() => setIsStoryModalOpen(true)}
+            className="text-xs font-bold border-amber-500/30 text-amber-300 hover:bg-amber-500/10"
+          >
+            Print Story
+          </Button>
+
+          <Button
+            size="sm"
+            variant="outline"
+            leftIcon={<FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />}
+            onClick={() => setIsExportModalOpen(true)}
+            className="text-xs font-bold border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/10"
+          >
+            Exportar Período
+          </Button>
         </div>
       </div>
 
@@ -483,6 +507,19 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
+
+      {/* Modal de Gerador de Prints de Marketing (Stories) */}
+      <MarketingStoryModal
+        isOpen={isStoryModalOpen}
+        onClose={() => setIsStoryModalOpen(false)}
+        dashboardStats={stats}
+      />
+
+      {/* Modal de Exportação de Dados por Data Personalizada */}
+      <ExportReportModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+      />
     </div>
   );
 }

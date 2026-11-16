@@ -11,7 +11,10 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Wrench,
-  Calculator,
+  Camera,
+  FileSpreadsheet,
+  Smartphone,
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +23,9 @@ interface QuickActionsModalProps {
   onClose: () => void;
   onOpenProductWizard: () => void;
   onOpenSaleModal: () => void;
+  onOpenMarketingModal?: () => void;
+  onOpenExportModal?: () => void;
+  onOpenInstallPwaModal?: () => void;
 }
 
 export const QuickActionsModal: React.FC<QuickActionsModalProps> = ({
@@ -27,6 +33,9 @@ export const QuickActionsModal: React.FC<QuickActionsModalProps> = ({
   onClose,
   onOpenProductWizard,
   onOpenSaleModal,
+  onOpenMarketingModal,
+  onOpenExportModal,
+  onOpenInstallPwaModal,
 }) => {
   if (!isOpen) return null;
 
@@ -43,12 +52,32 @@ export const QuickActionsModal: React.FC<QuickActionsModalProps> = ({
     },
     {
       label: "Cadastrar Produto",
-      desc: "Assistente guiado em 5 etapas com rascunhos",
+      desc: "Assistente guiado em 5 etapas com Live Preview",
       icon: PackagePlus,
       color: "bg-blue-500/20 text-blue-400 border-blue-500/30",
       onClick: () => {
         onClose();
         onOpenProductWizard();
+      },
+    },
+    {
+      label: "📸 Gerar Print de Marketing",
+      desc: "Cards para postar Stories de Vendas, Compras e Lucro",
+      icon: Camera,
+      color: "bg-amber-500/20 text-amber-400 border-amber-500/30",
+      onClick: () => {
+        onClose();
+        if (onOpenMarketingModal) onOpenMarketingModal();
+      },
+    },
+    {
+      label: "📊 Exportar Levantamento",
+      desc: "Exportação em PDF ou Planilha Excel por período",
+      icon: FileSpreadsheet,
+      color: "bg-teal-500/20 text-teal-400 border-teal-500/30",
+      onClick: () => {
+        onClose();
+        if (onOpenExportModal) onOpenExportModal();
       },
     },
     {
@@ -59,49 +88,47 @@ export const QuickActionsModal: React.FC<QuickActionsModalProps> = ({
       href: "/catiras",
     },
     {
-      label: "Nova Compra",
+      label: "📱 Instalar App no Celular",
+      desc: "Como adicionar o ícone à tela inicial do iPhone e Android",
+      icon: Smartphone,
+      color: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
+      onClick: () => {
+        onClose();
+        if (onOpenInstallPwaModal) onOpenInstallPwaModal();
+      },
+    },
+    {
+      label: "Nova Compra de Lote",
       desc: "Entrada de lote ou compra com fornecedor",
       icon: Truck,
-      color: "bg-amber-500/20 text-amber-400 border-amber-500/30",
+      color: "bg-slate-700/40 text-slate-200 border-slate-700",
       href: "/compras",
     },
     {
-      label: "Lançar Despesa",
+      label: "Lançar Despesa / Custo",
       desc: "Despesas fixas, variáveis ou custos extras",
       icon: ArrowDownRight,
       color: "bg-red-500/20 text-red-400 border-red-500/30",
-      href: "/financeiro?tab=despesas",
-    },
-    {
-      label: "Ordem de Serviço (O.S.)",
-      desc: "Manutenção de aparelhos, orçamentos e peças",
-      icon: Wrench,
-      color: "bg-teal-500/20 text-teal-400 border-teal-500/30",
-      href: "/servicos",
+      href: "/financeiro",
     },
   ];
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/85 backdrop-blur-md transition-opacity"
-        onClick={onClose}
-      />
+      <div className="fixed inset-0 bg-black/85 backdrop-blur-md" onClick={onClose} />
 
-      {/* Action Sheet Card */}
-      <div className="relative w-full sm:max-w-md bg-dark-900 border border-slate-800 rounded-t-3xl sm:rounded-2xl p-6 shadow-2xl z-10 animate-in slide-in-from-bottom duration-200">
+      <div className="relative w-full sm:max-w-md bg-dark-900 border border-slate-800 rounded-t-3xl sm:rounded-3xl p-5 sm:p-6 shadow-2xl z-10 animate-in slide-in-from-bottom duration-200 max-h-[85vh] overflow-y-auto">
         <div className="flex items-center justify-between pb-3 border-b border-slate-800/80 mb-4">
           <div>
-            <h3 className="text-base font-bold text-white flex items-center gap-2">
+            <h3 className="text-base font-extrabold text-white flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-              Ações Rápidas
+              Central de Ações Rápidas
             </h3>
             <p className="text-xs text-slate-400">Selecione a operação desejada</p>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-dark-800 transition-colors"
+            className="p-1.5 text-slate-400 hover:text-white rounded-xl bg-dark-850 hover:bg-dark-800"
           >
             <X className="w-5 h-5" />
           </button>
@@ -116,7 +143,7 @@ export const QuickActionsModal: React.FC<QuickActionsModalProps> = ({
                   key={i}
                   href={act.href}
                   onClick={onClose}
-                  className="flex items-center gap-3.5 p-3 rounded-xl bg-dark-850 hover:bg-dark-800 border border-slate-800 hover:border-slate-700 transition-all text-left group"
+                  className="flex items-center gap-3.5 p-3 rounded-2xl bg-dark-850 hover:bg-dark-800 border border-slate-800/80 hover:border-slate-700 transition-all text-left group btn-press"
                 >
                   <div
                     className={cn(
@@ -127,7 +154,7 @@ export const QuickActionsModal: React.FC<QuickActionsModalProps> = ({
                     <Icon className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className="text-sm font-semibold text-white group-hover:text-emerald-400 transition-colors">
+                    <h4 className="text-sm font-bold text-white group-hover:text-emerald-400 transition-colors">
                       {act.label}
                     </h4>
                     <p className="text-xs text-slate-400">{act.desc}</p>
@@ -140,7 +167,7 @@ export const QuickActionsModal: React.FC<QuickActionsModalProps> = ({
               <button
                 key={i}
                 onClick={act.onClick}
-                className="flex items-center gap-3.5 p-3 rounded-xl bg-dark-850 hover:bg-dark-800 border border-slate-800 hover:border-slate-700 transition-all text-left group w-full"
+                className="flex items-center gap-3.5 p-3 rounded-2xl bg-dark-850 hover:bg-dark-800 border border-slate-800/80 hover:border-slate-700 transition-all text-left group w-full btn-press"
               >
                 <div
                   className={cn(
@@ -151,7 +178,7 @@ export const QuickActionsModal: React.FC<QuickActionsModalProps> = ({
                   <Icon className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-semibold text-white group-hover:text-emerald-400 transition-colors">
+                  <h4 className="text-sm font-bold text-white group-hover:text-emerald-400 transition-colors">
                     {act.label}
                   </h4>
                   <p className="text-xs text-slate-400">{act.desc}</p>

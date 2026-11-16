@@ -175,12 +175,13 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({ isOpen, onClose })
             <span className="text-[10px] text-slate-400">Hostinger Ready • Asaas Integrado</span>
           </div>
           <Link
-            href="/"
+            href="/login"
             onClick={onClose}
-            className="p-2 text-slate-400 hover:text-red-400 rounded-lg hover:bg-red-500/10 transition-colors"
-            title="Início"
+            className="p-2 text-slate-400 hover:text-red-400 rounded-xl hover:bg-red-500/10 transition-colors btn-press flex items-center gap-1.5 text-xs font-semibold"
+            title="Sair / Trocar Usuário"
           >
             <LogOut className="w-4 h-4" />
+            <span className="hidden xs:inline">Sair</span>
           </Link>
         </div>
       </div>
